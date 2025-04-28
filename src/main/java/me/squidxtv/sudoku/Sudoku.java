@@ -1,5 +1,14 @@
 package me.squidxtv.sudoku;
 
+import javax.imageio.ImageIO;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
@@ -43,6 +52,84 @@ public class Sudoku {
         }
 
         return new Sudoku(copy, left, right, top, bottom);
+    }
+
+    public void exportAsImage(File file) throws IOException {
+        int cellSize = 50;
+        int margin = 2*cellSize;
+
+        int size = board.length * cellSize + 2 * margin;
+        BufferedImage image = new BufferedImage(size, size, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = image.createGraphics();
+
+        FontMetrics metrics = g.getFontMetrics();
+
+        g.setColor(Color.WHITE);
+        g.fillRect(0, 0, size, size);
+
+        g.setColor(Color.BLACK);
+        g.setFont(new Font("SansSerif", Font.PLAIN, 32));
+        int textHeight = metrics.getAscent();
+
+        for (int i = 0; i <= board.length; i++) {
+            int thickness = i % 3 == 0 ? 3 : 1;
+            g.setStroke(new BasicStroke(thickness));
+
+            int pos = margin + i * cellSize;
+            g.drawLine(pos, margin, pos, margin + board.length * cellSize);
+            g.drawLine(margin, pos, margin + board.length * cellSize, pos);
+        }
+
+        for (int row = 0; row < board.length; row++) {
+            for (int col = 0; col < board[row].length; col++) {
+                int cell = board[row][col];
+
+                if (cell == EMPTY) {
+                    continue;
+                }
+
+                int textWidth = metrics.stringWidth(String.valueOf(cell));
+
+                int x = margin + col * cellSize + cellSize / 2 - textWidth;
+                int y = margin + row * cellSize + cellSize / 2 + textHeight;
+                g.drawString(String.valueOf(cell), x, y);
+            }
+        }
+
+        g.setFont(new Font("SansSerif", Font.BOLD, 32));
+        metrics = g.getFontMetrics();
+        textHeight = metrics.getAscent();
+
+        for (int i = 0; i < board.length; i++) {
+            String text = String.valueOf(left[i]);
+
+            int textWidth = metrics.stringWidth(text);
+            int x = margin - cellSize / 2 - textWidth / 2;
+            int y = margin + i * cellSize + cellSize / 2 + textHeight / 2;
+            g.drawString(text, x, y);
+
+            text = String.valueOf(right[i]);
+            textWidth = metrics.stringWidth(text);
+            x = margin + board.length * cellSize + cellSize / 2 - textWidth / 2;
+            g.drawString(text, x, y);
+
+            // Obere Summen
+            text = String.valueOf(top[i]);
+            textWidth = metrics.stringWidth(text);
+            x = margin + i * cellSize + cellSize / 2 - textWidth / 2;
+            y = margin - 5;
+            g.drawString(text, x, y);
+
+            // Untere Summen
+            text = String.valueOf(bottom[i]);
+            textWidth = metrics.stringWidth(text);
+            x = margin + i * cellSize + cellSize / 2 - textWidth / 2;
+            y = margin + board.length * cellSize + cellSize / 2 + 6;
+            g.drawString(text, x, y);
+        }
+
+        g.dispose();
+        ImageIO.write(image, "png", file);
     }
 
     @Override

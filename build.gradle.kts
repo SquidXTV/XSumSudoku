@@ -18,4 +18,10 @@ tasks {
     test {
         useJUnitPlatform()
     }
+
+    jar {
+        manifest {
+            attributes["Main-Class"] = "me.squidxtv.sudoku.Main"
+        }
+    }
 }
